@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>并发库存扣减测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; color: #555; font-weight: 500; }
+        input { width: 100%; padding: 10px 12px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 14px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-default { background: #f0f0f0; color: #333; margin-left: 10px; }
+        .actions { text-align: center; margin-top: 25px; }
+        .result { margin-top: 25px; padding: 20px; background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 4px; display: none; }
+        .result.show { display: block; }
+        .result h3 { color: #52c41a; margin-bottom: 15px; }
+        .result-item { padding: 6px 0; color: #333; }
+        .warn { color: #faad14; margin-top: 10px; font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>并发库存扣减测试</h1>
+    <p class="warn">请先确保商品列表中有库存大于0的商品，记录其ID后填写下方表单。</p>
+    <form id="testForm">
+        <div class="form-group">
+            <label>商品ID</label>
+            <input type="number" id="productId" required placeholder="请输入要测试的商品ID"/>
+        </div>
+        <div class="form-group">
+            <label>并发线程数</label>
+            <input type="number" id="threadCount" value="10" min="1" max="100" required/>
+        </div>
+        <div class="form-group">
+            <label>每线程扣减数量</label>
+            <input type="number" id="quantity" value="1" min="1" required/>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn btn-primary">开始并发测试</button>
+            <a href="/" class="btn btn-default">返回首页</a>
+        </div>
+    </form>
+    <div id="result" class="result">
+        <h3>测试结果</h3>
+        <div class="result-item">并发线程数：<span id="rThreads"></span></div>
+        <div class="result-item">每线程扣减：<span id="rQty"></span></div>
+        <div class="result-item">成功次数：<span id="rSuccess"></span></div>
+        <div class="result-item">失败次数：<span id="rFail"></span></div>
+        <div class="result-item">剩余库存：<span id="rStock"></span></div>
+        <div class="result-item">耗时：<span id="rTime"></span> ms</div>
+    </div>
+</div>
+<script>
+    document.getElementById('testForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const productId = document.getElementById('productId').value;
+        const threadCount = document.getElementById('threadCount').value;
+        const quantity = document.getElementById('quantity').value;
+
+        const btn = this.querySelector('button[type="submit"]');
+        btn.textContent = '测试中...';
+        btn.disabled = true;
+
+        const formData = new URLSearchParams();
+        formData.append('productId', productId);
+        formData.append('threadCount', threadCount);
+        formData.append('quantity', quantity);
+
+        fetch('/concurrent/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('rThreads').textContent = data.threadCount;
+            document.getElementById('rQty').textContent = data.quantityPerThread;
+            document.getElementById('rSuccess').textContent = data.successCount;
+            document.getElementById('rFail').textContent = data.failCount;
+            document.getElementById('rStock').textContent = data.remainingStock;
+            document.getElementById('rTime').textContent = data.elapsedMillis;
+            document.getElementById('result').classList.add('show');
+        })
+        .catch(err => {
+            alert('测试失败: ' + err.message);
+        })
+        .finally(() => {
+            btn.textContent = '开始并发测试';
+            btn.disabled = false;
+        });
+    });
+</script>
+</body>
+</html>

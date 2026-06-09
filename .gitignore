@@ -1,0 +1,50 @@
+### IntelliJ IDEA ###
+.idea/
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+*.iml
+.kotlin
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+
+### Maven ###
+target/
+.mvn/
+
+### Build artifacts ###
+*.jar
+*.war
+
+### Temp files ###
+*.bat
+*.ps1
+mysql-init.*
+mysql-result.*
+fix-*.sql
+update-*.sql
+DEPLOY.md
+tempfile_*

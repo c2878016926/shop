@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>商品数据统计</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; }
+        .card { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+        .card h2 { color: #1890ff; font-size: 18px; margin-bottom: 15px; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .stat-row:last-child { border-bottom: none; }
+        .stat-label { color: #666; }
+        .stat-value { color: #333; font-weight: 600; }
+        .btn { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-default { background: #f0f0f0; color: #333; margin-left: 10px; }
+        .async-result { margin-top: 15px; padding: 15px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 4px; display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>商品数据统计</h1>
+
+    <div class="card">
+        <h2>手动 JDBC 原生 SQL 统计</h2>
+        <div class="stat-row">
+            <span class="stat-label">商品总数</span>
+            <span class="stat-value" th:text="${jdbcStats['TOTAL_COUNT'] != null ? jdbcStats['TOTAL_COUNT'] : 0}">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">库存总量</span>
+            <span class="stat-value" th:text="${jdbcStats['TOTAL_STOCK'] != null ? jdbcStats['TOTAL_STOCK'] : 0}">0</span>
+        </div>
+        <div class="stat-row">
+            <span class="stat-label">平均价格</span>
+            <span class="stat-value" th:text="${jdbcStats['AVG_PRICE'] != null ? '¥' + #numbers.formatDecimal(jdbcStats['AVG_PRICE'], 1, 2) : '¥0.00'}">¥0.00</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>异步线程池统计（@Async + CompletableFuture）</h2>
+        <button class="btn btn-primary" onclick="loadAsyncStats()">启动异步统计</button>
+        <div id="asyncResult" class="async-result">
+            <div class="stat-row"><span class="stat-label">商品总数</span><span class="stat-value" id="aCount">-</span></div>
+            <div class="stat-row"><span class="stat-label">价格总和</span><span class="stat-value" id="aTotal">-</span></div>
+            <div class="stat-row"><span class="stat-label">平均价格</span><span class="stat-value" id="aAvg">-</span></div>
+            <div class="stat-row"><span class="stat-label">库存总和</span><span class="stat-value" id="aStock">-</span></div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top: 20px;">
+        <a href="/" class="btn btn-default">返回首页</a>
+    </div>
+</div>
+<script>
+    function loadAsyncStats() {
+        const btn = document.querySelector('button[onclick="loadAsyncStats()"]');
+        btn.textContent = '统计中...';
+        btn.disabled = true;
+        fetch('/stats/async')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('aCount').textContent = data.totalCount;
+                document.getElementById('aTotal').textContent = '¥' + data.totalPrice.toFixed(2);
+                document.getElementById('aAvg').textContent = '¥' + data.avgPrice.toFixed(2);
+                document.getElementById('aStock').textContent = data.totalStock;
+                document.getElementById('asyncResult').style.display = 'block';
+            })
+            .catch(err => alert('异步统计失败: ' + err.message))
+            .finally(() => {
+                btn.textContent = '启动异步统计';
+                btn.disabled = false;
+            });
+    }
+</script>
+</body>
+</html>
