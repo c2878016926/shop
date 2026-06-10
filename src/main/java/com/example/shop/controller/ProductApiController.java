@@ -107,4 +107,13 @@ public class ProductApiController {
     public ApiResponse<List<Map<String, Object>>> withCategory() {
         return ApiResponse.success(productService.findProductsWithCategory());
     }
+
+    /**
+     * 库存预警查询：返回库存低于阈值的商品列表
+     */
+    @GetMapping("/low-stock")
+    public ApiResponse<List<Product>> lowStock(@RequestParam(defaultValue = "10") int threshold) {
+        List<Product> products = productService.findLowStockProducts(threshold);
+        return ApiResponse.success(products);
+    }
 }
