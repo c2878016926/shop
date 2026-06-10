@@ -3,6 +3,8 @@ package com.example.shop.service;
 import com.example.shop.entity.Order;
 import com.example.shop.entity.Product;
 import com.example.shop.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,8 @@ import java.util.Map;
 @Service
 @Transactional(readOnly = true)
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
     private final ProductService productService;
@@ -48,13 +52,16 @@ public class OrderService {
      */
     @Transactional
     public Order placeOrder(Long productId, Integer quantity) {
+        log.info("下单: productId={}, quantity={}", productId, quantity);
         boolean ok = productService.reduceStock(productId, quantity);
         if (!ok) {
             throw new IllegalArgumentException("库存不足或商品不存在，下单失败");
         }
         Product product = productService.findById(productId);
         Order order = new Order(product, quantity);
-        return orderRepository.save(order);
+        Order saved = orderRepository.save(order);
+        log.info("订单创建成功: orderId={}, totalAmount={}", saved.getId(), saved.getTotalAmount());
+        return saved;
     }
 
     /**

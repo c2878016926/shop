@@ -1,5 +1,7 @@
 package com.example.shop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 
@@ -23,6 +25,7 @@ public class Order {
      * 多对一：多个订单对应一个商品
      * JoinColumn 定义外键列 product_id
      */
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "category"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;

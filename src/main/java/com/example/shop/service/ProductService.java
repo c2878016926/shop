@@ -3,6 +3,8 @@ package com.example.shop.service;
 import com.example.shop.entity.Product;
 import com.example.shop.repository.ProductRepository;
 import jakarta.persistence.EntityManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,8 @@ import java.util.Map;
 @Service
 @Transactional(readOnly = true)
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
     private final JdbcTemplate jdbcTemplate;
@@ -64,6 +68,7 @@ public class ProductService {
 
     @Transactional
     public Product save(Product product) {
+        log.info("保存商品: id={}, name={}", product.getId(), product.getName());
         return productRepository.save(product);
     }
 
@@ -120,9 +125,11 @@ public class ProductService {
 
     @Transactional
     public void deleteById(Long id) {
+        log.info("删除商品: id={}", id);
         // 先删除引用该商品的所有订单（外键约束）
-        jdbcTemplate.update("DELETE FROM orders WHERE product_id = ?", id);
+        int deleted = jdbcTemplate.update("DELETE FROM orders WHERE product_id = ?", id);
         productRepository.deleteById(id);
+        log.info("商品已删除，关联订单已清理: {} 条", deleted);
         // 如果删除后表为空，重置自增ID从1开始
         resetAutoIncrementIfEmpty();
     }
@@ -132,6 +139,7 @@ public class ProductService {
      */
     @Transactional
     public void deleteAllAndResetId() {
+        log.warn("清空所有商品和订单并重置ID");
         // 先删除所有订单（解除外键约束）
         jdbcTemplate.execute("DELETE FROM orders");
         // 再删除所有商品
@@ -159,6 +167,7 @@ public class ProductService {
      */
     @Transactional
     public synchronized boolean reduceStock(Long productId, int quantity) {
+        log.debug("并发扣库存: productId={}, quantity={}", productId, quantity);
         Product product = productRepository.findById(productId).orElse(null);
         if (product == null || product.getStock() < quantity) {
             return false;

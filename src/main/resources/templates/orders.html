@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>订单管理 - 商品管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 20px 30px; }
+        .header h1 { font-size: 22px; }
+        .header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .nav-btns { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-btns a, .nav-btns button { padding: 8px 18px; border-radius: 6px; text-decoration: none; font-size: 13px; border: none; cursor: pointer; }
+        .btn-primary { background: #667eea; color: #fff; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-purple { background: #722ed1; color: #fff; }
+        .btn-info { background: #1890ff; color: #fff; }
+        .btn-warning { background: #faad14; color: #fff; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 20px; }
+        .card h2 { font-size: 16px; margin-bottom: 15px; color: #333; border-left: 4px solid #667eea; padding-left: 10px; }
+        .alert { padding: 10px 16px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
+        .alert-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+        .alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #fafafa; }
+        th { padding: 10px 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover { background: #f9f9ff; }
+        .status-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-PENDING { background: #fff7e6; color: #d48806; }
+        .status-COMPLETED { background: #f6ffed; color: #389e0d; }
+        .status-CANCELLED { background: #fff2f0; color: #cf1322; }
+        .status-SHIPPED { background: #e6f7ff; color: #096dd9; }
+        .empty-row { text-align: center; padding: 40px; color: #999; }
+        .actions form { display: inline; }
+        .actions select { padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; }
+        .actions button { padding: 4px 12px; font-size: 12px; border-radius: 4px; }
+        .filter-label { display: inline-block; background: #e6f7ff; color: #1890ff; padding: 4px 12px; border-radius: 4px; font-size: 12px; margin-bottom: 15px; }
+        .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-item { background: #fff; border-radius: 8px; padding: 15px 20px; flex: 1; min-width: 150px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stat-item .label { font-size: 12px; color: #888; }
+        .stat-item .value { font-size: 22px; font-weight: 700; color: #667eea; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📦 订单管理</h1>
+    <p>查看和管理所有订单记录</p>
+</div>
+
+<div class="container">
+    <div class="nav-btns">
+        <a href="/" class="btn-primary">🏠 首页</a>
+        <a href="/orders" class="btn-info">📋 全部订单</a>
+        <a href="/orders/status/PENDING" class="btn-warning">⏳ 待处理</a>
+        <a href="/orders/status/COMPLETED" class="btn-success">✅ 已完成</a>
+        <a href="/orders/status/CANCELLED" class="btn-danger">❌ 已取消</a>
+        <a href="/concurrent" class="btn-purple">⚡ 并发测试</a>
+        <a href="/stats" class="btn-purple">📊 数据统计</a>
+    </div>
+
+    <!-- 提示信息 -->
+    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- 筛选标签 -->
+    <span th:if="${filterLabel}" class="filter-label" th:text="${filterLabel}"></span>
+
+    <!-- 统计栏 -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="label">订单总数</div>
+            <div class="value" th:text="${orders != null ? orders.size() : 0}">0</div>
+        </div>
+        <div class="stat-item">
+            <div class="label">总销售额</div>
+            <div class="value" th:text="'¥' + ${#numbers.formatDecimal(totalSales != null ? totalSales : 0, 1, 2)}">¥0.00</div>
+        </div>
+    </div>
+
+    <!-- 订单列表 -->
+    <div class="card">
+        <h2>订单记录</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>订单ID</th>
+                    <th>商品</th>
+                    <th>数量</th>
+                    <th>单价</th>
+                    <th>总金额</th>
+                    <th>状态</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            <th:block th:if="${orders != null and !orders.isEmpty()}">
+                <tr th:each="o : ${orders}">
+                    <td th:text="${o.id}"></td>
+                    <td>
+                        <span th:text="${o.product != null ? o.product.name : '未知商品'}"></span>
+                        <span style="color:#999;font-size:11px;" th:if="${o.product != null}" th:text="'(ID:' + ${o.product.id} + ')'"></span>
+                    </td>
+                    <td th:text="${o.quantity}"></td>
+                    <td th:text="${o.unitPrice != null ? '¥' + #numbers.formatDecimal(o.unitPrice, 1, 2) : '-'}"></td>
+                    <td style="font-weight:600;color:#667eea;" th:text="${o.totalAmount != null ? '¥' + #numbers.formatDecimal(o.totalAmount, 1, 2) : '-'}"></td>
+                    <td>
+                        <span class="status-badge" th:classappend="'status-' + ${o.status}" th:text="${o.status}"></span>
+                    </td>
+                    <td style="font-size:12px;color:#888;" th:text="${o.createTime != null ? #temporals.format(o.createTime, 'yyyy-MM-dd HH:mm') : '-'}"></td>
+                    <td class="actions">
+                        <form th:action="@{/orders/{id}/status(id=${o.id})}" method="post" style="display:inline;">
+                            <select name="status" onchange="this.form.submit()">
+                                <option value="">更改状态...</option>
+                                <option value="PENDING">待处理</option>
+                                <option value="COMPLETED">已完成</option>
+                                <option value="SHIPPED">已发货</option>
+                                <option value="CANCELLED">已取消</option>
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+            </th:block>
+            <tr th:if="${orders == null or orders.isEmpty()}">
+                <td colspan="8" class="empty-row">暂无订单记录，请先通过 API 或下单功能创建订单</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

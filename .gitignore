@@ -48,3 +48,9 @@ fix-*.sql
 update-*.sql
 DEPLOY.md
 tempfile_*
+
+### Reports / Documents ###
+*.txt
+!README.txt
+*.docx
+*.doc

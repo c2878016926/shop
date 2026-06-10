@@ -1,5 +1,6 @@
 package com.example.shop.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -36,6 +37,7 @@ public class Product {
      * 多对一：多个商品属于同一个分类
      * JoinColumn 定义外键列 category_id
      */
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "products"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;

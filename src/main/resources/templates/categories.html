@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>分类管理 - 商品管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', 'Segoe UI', sans-serif; background: #f0f2f5; color: #333; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 20px 30px; }
+        .header h1 { font-size: 22px; }
+        .header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+        .container { max-width: 1100px; margin: 20px auto; padding: 0 20px; }
+        .nav-btns { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .nav-btns a { padding: 8px 18px; border-radius: 6px; text-decoration: none; font-size: 13px; }
+        .btn-primary { background: #667eea; color: #fff; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-purple { background: #722ed1; color: #fff; }
+        .btn-info { background: #1890ff; color: #fff; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 20px; }
+        .card h2 { font-size: 16px; margin-bottom: 15px; color: #333; border-left: 4px solid #667eea; padding-left: 10px; }
+        .alert { padding: 10px 16px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; }
+        .alert-success { background: #f6ffed; border: 1px solid #b7eb8f; color: #389e0d; }
+        .alert-error { background: #fff2f0; border: 1px solid #ffccc7; color: #cf1322; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .form-group input, .form-group textarea { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #667eea; outline: none; box-shadow: 0 0 0 2px rgba(102,126,234,0.2); }
+        .btn-submit { padding: 8px 20px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; height: 36px; }
+        .btn-submit:hover { background: #5a6fd6; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead { background: #fafafa; }
+        th { padding: 10px 12px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8; }
+        td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:hover { background: #f9f9ff; }
+        .empty-row { text-align: center; padding: 40px; color: #999; }
+        .btn-del { padding: 4px 12px; background: #ff4d4f; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-del:hover { background: #d9363e; }
+        .error-text { color: #ff4d4f; font-size: 12px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📂 分类管理</h1>
+    <p>管理商品分类信息</p>
+</div>
+
+<div class="container">
+    <div class="nav-btns">
+        <a href="/" class="btn-primary">🏠 首页</a>
+        <a href="/orders" class="btn-info">📋 订单管理</a>
+        <a href="/categories" class="btn-success">📂 分类管理</a>
+        <a href="/concurrent" class="btn-purple">⚡ 并发测试</a>
+        <a href="/stats" class="btn-purple">📊 数据统计</a>
+    </div>
+
+    <!-- 提示信息 -->
+    <div th:if="${msg}" class="alert alert-success" th:text="${msg}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <!-- 新增分类表单 -->
+    <div class="card">
+        <h2>新增分类</h2>
+        <form action="/categories/save" method="post" th:object="${category}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>分类名称 *</label>
+                    <input type="text" th:field="*{name}" placeholder="请输入分类名称" required style="width:200px;"/>
+                    <span class="error-text" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                </div>
+                <div class="form-group">
+                    <label>描述</label>
+                    <input type="text" th:field="*{description}" placeholder="可选描述" style="width:300px;"/>
+                </div>
+                <button type="submit" class="btn-submit">添加分类</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 分类列表 -->
+    <div class="card">
+        <h2>分类列表</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>分类名称</th>
+                    <th>描述</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            <th:block th:if="${categories != null and !categories.isEmpty()}">
+                <tr th:each="c : ${categories}">
+                    <td th:text="${c.id}"></td>
+                    <td style="font-weight:600;" th:text="${c.name}"></td>
+                    <td style="color:#888;" th:text="${c.description != null ? c.description : '-'}"></td>
+                    <td>
+                        <form th:action="@{/categories/delete/{id}(id=${c.id})}" method="post" style="display:inline;"
+                              onsubmit="return confirm('确定删除分类【' + document.querySelector('[th\\:text]') + '】吗？')">
+                            <button type="submit" class="btn-del">删除</button>
+                        </form>
+                    </td>
+                </tr>
+            </th:block>
+            <tr th:if="${categories == null or categories.isEmpty()}">
+                <td colspan="4" class="empty-row">暂无分类，请先添加</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>
