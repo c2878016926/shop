@@ -63,6 +63,19 @@ public class GlobalExceptionHandler {
         return "error";
     }
 
+    /**
+     * 处理库存不足异常
+     */
+    @ExceptionHandler(StockInsufficientException.class)
+    public Object handleStockInsufficient(StockInsufficientException e, HttpServletRequest request, Model model) {
+        log.warn("库存不足: {}", e.getMessage());
+        if (isApiRequest(request)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.error(409, e.getMessage()));
+        }
+        model.addAttribute("error", e.getMessage());
+        return "error";
+    }
+
     @ExceptionHandler(Exception.class)
     public Object handleException(Exception e, HttpServletRequest request, Model model) {
         log.error("未捕获异常: {} - {}", request.getRequestURI(), e.getMessage(), e);

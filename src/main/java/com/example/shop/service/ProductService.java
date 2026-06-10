@@ -1,6 +1,7 @@
 package com.example.shop.service;
 
 import com.example.shop.entity.Product;
+import com.example.shop.exception.StockInsufficientException;
 import com.example.shop.repository.ProductRepository;
 import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
@@ -163,14 +164,30 @@ public class ProductService {
     }
 
     /**
+     * 查询低库存预警商品（库存 <= 阈值）
+     * @param threshold 库存阈值，默认10
+     */
+    public List<Product> findLowStockProducts(int threshold) {
+        return productRepository.findByStockLessThanEqual(threshold);
+    }
+
+    public List<Product> findLowStockProducts() {
+        return findLowStockProducts(10);
+    }
+
+    /**
      * 并发库存扣减（使用 synchronized 保证线程安全）
+     * 库存不足时抛出 StockInsufficientException
      */
     @Transactional
     public synchronized boolean reduceStock(Long productId, int quantity) {
         log.debug("并发扣库存: productId={}, quantity={}", productId, quantity);
         Product product = productRepository.findById(productId).orElse(null);
-        if (product == null || product.getStock() < quantity) {
-            return false;
+        if (product == null) {
+            throw new StockInsufficientException("商品不存在，ID: " + productId);
+        }
+        if (product.getStock() < quantity) {
+            throw new StockInsufficientException(productId, quantity, product.getStock());
         }
         product.setStock(product.getStock() - quantity);
         productRepository.save(product);
