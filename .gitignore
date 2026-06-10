@@ -39,6 +39,9 @@ target/
 *.jar
 *.war
 
+### Logs ###
+logs/
+
 ### Temp files ###
 *.bat
 *.ps1
