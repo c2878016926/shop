@@ -1,20 +1,26 @@
 package com.example.shop.dto;
 
+import java.time.LocalDateTime;
+
 /**
  * 统一 API 响应封装
- * 包含 code、message、data 三个标准字段
+ * 包含 code、message、data、timestamp 四个标准字段
  */
 public class ApiResponse<T> {
     private int code;
     private String message;
     private T data;
+    private LocalDateTime timestamp;
 
-    public ApiResponse() {}
+    public ApiResponse() {
+        this.timestamp = LocalDateTime.now();
+    }
 
     public ApiResponse(int code, String message, T data) {
         this.code = code;
         this.message = message;
         this.data = data;
+        this.timestamp = LocalDateTime.now();
     }
 
     public static <T> ApiResponse<T> success(T data) {
@@ -45,4 +51,7 @@ public class ApiResponse<T> {
 
     public T getData() { return data; }
     public void setData(T data) { this.data = data; }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
 }
