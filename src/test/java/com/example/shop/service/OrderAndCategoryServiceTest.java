@@ -3,6 +3,7 @@ package com.example.shop.service;
 import com.example.shop.entity.Category;
 import com.example.shop.entity.Order;
 import com.example.shop.entity.Product;
+import com.example.shop.exception.StockInsufficientException;
 import com.example.shop.repository.CategoryRepository;
 import com.example.shop.repository.OrderRepository;
 import com.example.shop.repository.ProductRepository;
@@ -106,7 +107,7 @@ class OrderAndCategoryServiceTest {
 
     @Test
     void testPlaceOrderInsufficientStock() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(StockInsufficientException.class,
                 () -> orderService.placeOrder(testProduct.getId(), 999));
     }
 

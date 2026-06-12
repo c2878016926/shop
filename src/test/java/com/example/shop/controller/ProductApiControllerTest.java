@@ -109,8 +109,8 @@ class ProductApiControllerTest {
     void testPlaceOrderInsufficientStock() throws Exception {
         mockMvc.perform(post("/api/products/" + testProduct.getId() + "/order")
                         .param("quantity", "999"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value(400));
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409));
     }
 
     @Test

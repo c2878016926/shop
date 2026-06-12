@@ -2,6 +2,7 @@ package com.example.shop.service;
 
 import com.example.shop.entity.Category;
 import com.example.shop.entity.Product;
+import com.example.shop.exception.StockInsufficientException;
 import com.example.shop.repository.CategoryRepository;
 import com.example.shop.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -78,16 +79,14 @@ class ProductServiceTest {
 
     @Test
     void testReduceStockInsufficient() {
-        boolean result = productService.reduceStock(testProduct.getId(), 200);
-        assertFalse(result);
+        assertThrows(StockInsufficientException.class, () -> productService.reduceStock(testProduct.getId(), 200));
         Product unchanged = productRepository.findById(testProduct.getId()).get();
         assertEquals(100, unchanged.getStock());
     }
 
     @Test
     void testReduceStockProductNotFound() {
-        boolean result = productService.reduceStock(99999L, 1);
-        assertFalse(result);
+        assertThrows(StockInsufficientException.class, () -> productService.reduceStock(99999L, 1));
     }
 
     @Test
