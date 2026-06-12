@@ -18,9 +18,12 @@ public class Product {
     private Long id;
 
     @NotBlank(message = "商品名称不能为空")
-    @Column(nullable = false)
+    @Size(max = 100, message = "商品名称不能超过100个字符")
+    @Column(nullable = false, length = 100)
     private String name;
 
+    @Size(max = 500, message = "商品描述不能超过500个字符")
+    @Column(length = 500)
     private String description;
 
     @NotNull(message = "价格不能为空")
